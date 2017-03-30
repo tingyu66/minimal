@@ -1,5 +1,10 @@
-Jenkins tests
-tree.cxx
-list.cxx
-List based traversal
+Use periodic index (efficient loop)
 OpenMP with loops
+Choose between eager/lazy
+
+Jenkins tests
+Helmholtz
+Stokes
+MPI
+precomputation, BLAS
+GPU

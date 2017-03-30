@@ -1,7 +1,8 @@
 #include "build_tree.h"
 #include "kernel.h"
 #include "timer.h"
-#include "traversal.h"
+//#include "traverse_eager.h"
+#include "traverse_lazy.h"
 using namespace exafmm;
 
 int main(int argc, char ** argv) {
@@ -18,7 +19,7 @@ int main(int argc, char ** argv) {
   Bodies bodies(numBodies);                                     // Initialize bodies
   real_t average = 0;                                           // Average charge
   srand48(0);                                                   // Set seed for random number generator
-  for (int b=0; b<int(bodies.size()); b++) {                    // Loop over bodies
+  for (size_t b=0; b<bodies.size(); b++) {                      // Loop over bodies
     for (int d=0; d<2; d++) {                                   //  Loop over dimension
       bodies[b].X[d] = drand48() * 2 * M_PI - M_PI;             //   Initialize positions
     }                                                           //  End loop over dimension
@@ -28,26 +29,26 @@ int main(int argc, char ** argv) {
     for (int d=0; d<2; d++) bodies[b].F[d] = 0;                 //  Clear force
   }                                                             // End loop over bodies
   average /= bodies.size();                                     // Average charge
-  for (int b=0; b<int(bodies.size()); b++) {                    // Loop over bodies
+  for (size_t b=0; b<bodies.size(); b++) {                      // Loop over bodies
     bodies[b].q -= average;                                     // Charge neutral
   }                                                             // End loop over bodies
   stop("Initialize bodies");                                    // Stop timer
 
   //! Build tree
   start("Build tree");                                          // Start timer
-  Cell * cells = buildTree(bodies);                             // Build tree
+  Cells  cells = buildTree(bodies);                             // Build tree
   stop("Build tree");                                           // Stop timer
 
   //! FMM evaluation
-  start("Upward pass");                                         // Start timer
+  start("P2M & M2M");                                           // Start timer
   upwardPass(cells);                                            // Upward pass for P2M, M2M
-  stop("Upward pass");                                          // Stop timer
-  start("Traversal");                                           // Start timer
-  traversal(cells, cells, cycle);                               // Traversal for M2L, P2P
-  stop("Traversal");                                            // Stop timer
-  start("Downward pass");                                       // Start timer
+  stop("P2M & M2M");                                            // Stop timer
+  start("M2L & P2P");                                           // Start timer
+  horizontalPass(cells, cells, cycle);                          // Horizontal pass for M2L, P2P
+  stop("M2L & P2P");                                            // Stop timer
+  start("L2L & L2P");                                           // Start timer
   downwardPass(cells);                                          // Downward pass for L2L, L2P
-  stop("Downward pass");                                        // Stop timer
+  stop("L2L & L2P");                                            // Stop timer
 
   // Direct N-Body
   start("Direct N-Body");                                       // Start timer
@@ -59,7 +60,7 @@ int main(int argc, char ** argv) {
   }                                                             // End loop over target samples
   bodies.resize(numTargets);                                    // Resize bodies
   Bodies bodies2 = bodies;                                      // Backup bodies
-  for (int b=0; b<int(bodies.size()); b++) {                    // Loop over bodies
+  for (size_t b=0; b<bodies.size(); b++) {                      // Loop over bodies
     bodies[b].p = 0;                                            //  Clear potential
     for (int d=0; d<2; d++) bodies[b].F[d] = 0;                 //  Clear force
   }                                                             // End loop over bodies
@@ -68,7 +69,7 @@ int main(int argc, char ** argv) {
 
   //! Verify result
   double pDif = 0, pNrm = 0, FDif = 0, FNrm = 0;
-  for (int b=0; b<int(bodies.size()); b++) {                    // Loop over bodies & bodies2
+  for (size_t b=0; b<bodies.size(); b++) {                      // Loop over bodies & bodies2
     pDif += (bodies[b].p - bodies2[b].p) * (bodies[b].p - bodies2[b].p);// Difference of potential
     pNrm += bodies2[b].p * bodies2[b].p;                        //  Value of potential
     FDif += (bodies[b].F[0] - bodies2[b].F[0]) * (bodies[b].F[0] - bodies2[b].F[0])// Difference of force
