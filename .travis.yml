@@ -1,16 +1,8 @@
 sudo: false
 language: cpp
 script:
-    - cd 2d
-    - make all
-    - cd -
-    - cd 2dp
-    - make all
-    - cd -
-    - cd 3d
-    - make all
-    - cd -
-    - cd 3dp
-    - make all
-    - cd -
+    - cd 2d && make && cd -
+    - cd 2dp && make && cd -
+    - cd 3d && make && cd -
+    - cd 3dp && make && cd -
 
