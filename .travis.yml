@@ -1,0 +1,4 @@
+language: cpp
+script:
+    - cd 3d
+    - make all
